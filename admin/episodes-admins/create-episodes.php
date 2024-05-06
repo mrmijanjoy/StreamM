@@ -1,72 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <!-- This file has been downloaded from Bootsnipp.com. Enjoy! -->
-    <title>Admin Panel</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
-     <link href="../styles/style.css" rel="stylesheet">
-    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-</head>
-<body>
-<div id="wrapper">
-    <nav class="navbar header-top fixed-top navbar-expand-lg  navbar-dark bg-dark">
-      <div class="container">
-      <a class="navbar-brand" href="#">LOGO</a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText"
-        aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+<?php require "../includes/header.php" ?>
 
-      <div class="collapse navbar-collapse" id="navbarText">
-        <ul class="navbar-nav side-nav" >
-          <li class="nav-item">
-            <a class="nav-link" style="margin-left: 20px;" href="../index.html">Home
-              <span class="sr-only">(current)</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="../admins/admins.html" style="margin-left: 20px;">Admins</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="../shows-admins/show-shows.html" style="margin-left: 20px;">Shows</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="../genres-admins/show-genres.html" style="margin-left: 20px;">Genres</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="../episodes-admins/show-episodes.html" style="margin-left: 20px;">Episodes</a>
-          </li>
-        </ul>
-        <ul class="navbar-nav ml-md-auto d-md-flex">
-          <li class="nav-item">
-            <a class="nav-link" href="../index.html">Home
-              <span class="sr-only">(current)</span>
-            </a>
-          </li>
-          <li class="nav-item dropdown">
-            <a class="nav-link  dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              username
-            </a>
-            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <a class="dropdown-item" href="#">Logout</a>
-              
-          </li>
-                          
-          
-        </ul>
-      </div>
-    </div>
-    </nav>
-    <div class="container-fluid">
+<?php
+
+//shows
+$shows = $conn->query("SELECT * FROM shows");
+$shows->execute();
+
+$allShows = $shows->fetch(PDO::FETCH_OBJ);
+
+if(isset($_POST['submit'])){
+  if(empty($_POST['name']) OR empty($_POST['show_id'])) {
+    echo "<script>alert('One or more inputs are empty')</script>";
+  } else {
+    $name = $_POST['name'];
+    $show_id = $_POST['show_id'];
+
+    $thumbnail = $_FILES['thumbnail']['name'];
+    $video = $_FILES['video']['name'];
+
+    $dir_thumbnail = "videos/" . basename($thumbnail);
+    $dir_video = "videos/" . basename($video);
+
+    $insert = $conn->prepare("INSERT INTO shows(name,show_id,thumbnail,video) VALUES(:name,  :show_id, :thumbnail, :video)");
+
+    $insert->execute([
+      ":name" => $name,
+      ":show_id" => $show_id,
+      ":thumbnail" => $thumbnail,
+      ":video" => $video
+    ]);
+
+    if(move_uploaded_file($_FILES['thumbnail']['tmp_name'], $dir_thumbnail) AND move_uploaded_file($_FILES['video']['tmp_name']), $dir_video){
+      header("location:show-episodes.php");
+    }
+  }
+}
+
+?>
+
+
+<div class="container-fluid">
        <div class="row">
         <div class="col">
           <div class="card">
             <div class="card-body">
               <h5 class="card-title mb-5 d-inline">Create Episodes</h5>
-          <form method="POST" action="" enctype="multipart/form-data">
+          <form method="POST" action="create-episodes.php" enctype="multipart/form-data">
                 <!-- Email input -->
                 <div class="form-outline mb-4 mt-4">
                   <label>name</label>
@@ -87,9 +66,9 @@
                     <label>Shows</label>
                     <select name="show_id" class="form-select  form-control" aria-label="Default select example">
                       <option selected>Choose Shows</option>
-                      <option value="1">The Seven Deadly Sins: Wrath of the Gods</option>
-                      <option value="2">The Seven Deadly Sins: Wrath of the Gods</option>
-                      <option value="3">The Seven Deadly Sins: Wrath of the Gods</option>
+                      <?php foreach($allShows as $show) ?>
+                      <option value="<?php echo $show->id; ?>"><?php echo $show->title; ?></option>
+                      <?php endforeach; ?>
                     </select>
                 </div>
               
